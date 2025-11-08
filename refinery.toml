@@ -1,0 +1,5 @@
+[main]
+db_type = "Sqlite"
+db_path = "/home/crazcalm/.config/rust-job-search/rust_job_search.sqlite3" #Looks like '~' cannot be used in the path -- "~/.config/rust-job-search/rust_job_search.sqlite3"
+use_tls = false
+trust_cert = false
