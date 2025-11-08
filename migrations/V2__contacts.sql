@@ -1,4 +1,3 @@
-
 CREATE TABLE contacts(
     id                  INTEGER PRIMARY KEY,
     name          	TEXT NOT NULL DEFAULT "",
