@@ -56,7 +56,24 @@ impl Company {
 }
 
 impl Company {
-    fn save(&mut self, mut conn: Connection) {
+    fn get(conn: &Connection, id: i64) -> Result<Self, rusqlite::Error> {
+        conn.query_row(
+            "SELECT id, name, address, website, phone FROM company WHERE id = ?1",
+            [&id],
+            |row| {
+                let website_string: String = row.get(3).unwrap();
+
+                Ok(Company {
+                    id: Some(row.get(0).unwrap()),
+                    name: Some(row.get(1).unwrap()),
+                    address: Some(row.get(2).unwrap()),
+                    website: Some(Url::parse(website_string.as_str()).unwrap()),
+                    phone: Some(row.get(4).unwrap()),
+                })
+            },
+        )
+    }
+    fn save(&mut self, conn: &Connection) {
         /*
             If there is not ID, we create an entry, get the ID saved and add it back to this instance.
 
@@ -136,7 +153,7 @@ mod test {
     }
         */
 
-    fn run_migrations() {
+    fn run_migrations() -> Connection {
         refinery::embed_migrations!("migrations");
         let mut conn = Connection::open_in_memory().unwrap();
         migrations::runner().run(&mut conn).unwrap();
@@ -153,6 +170,8 @@ mod test {
             println!("{row:?}");
             Ok(())
         });
+
+        conn
     }
 
     #[test]
@@ -225,7 +244,82 @@ mod test {
     }
 
     #[test]
-    fn test_run_migrations() {
-        run_migrations();
+    fn test_get_method() {
+        let conn = run_migrations();
+        let mut company = Company {
+            id: None,
+            name: Some("test_name".to_string()),
+            address: Some("test address".to_string()),
+            phone: Some("test phone".to_string()),
+            website: Some(Url::parse("http://test-website.com").unwrap()),
+        };
+        company.save(&conn);
+
+        let company_from_db = Company::get(&conn, company.id.unwrap()).unwrap();
+
+        assert!(company == company_from_db);
+    }
+
+    #[test]
+    fn test_save_method() {
+        let conn = run_migrations();
+
+        let mut company = Company {
+            id: None,
+            name: Some("test_name".to_string()),
+            address: Some("test address".to_string()),
+            phone: Some("test phone".to_string()),
+            website: Some(Url::parse("http://test-website.com").unwrap()),
+        };
+        company.save(&conn);
+
+        let db_data = conn
+            .query_row(
+                "SELECT id, name, address, website, phone FROM company WHERE id = ?1",
+                [&company.id],
+                |row| {
+                    let website_string: String = row.get(3).unwrap();
+
+                    Ok(Company {
+                        id: Some(row.get(0).unwrap()),
+                        name: Some(row.get(1).unwrap()),
+                        address: Some(row.get(2).unwrap()),
+                        website: Some(Url::parse(website_string.as_str()).unwrap()),
+                        phone: Some(row.get(4).unwrap()),
+                    })
+                },
+            )
+            .unwrap();
+
+        // Testing "create" aspect of save method.
+        assert!(company == db_data);
+
+        company.set_name("New Name".to_string());
+        company.set_address("New Address".to_string());
+        company.set_website(Url::parse("http://new_website.com").unwrap());
+        company.set_phone("New Phone".to_string());
+
+        company.save(&conn);
+
+        let db_data_change = conn
+            .query_row(
+                "SELECT id, name, address, website, phone FROM company WHERE id = ?1",
+                [&company.id],
+                |row| {
+                    let website_string: String = row.get(3).unwrap();
+
+                    Ok(Company {
+                        id: Some(row.get(0).unwrap()),
+                        name: Some(row.get(1).unwrap()),
+                        address: Some(row.get(2).unwrap()),
+                        website: Some(Url::parse(website_string.as_str()).unwrap()),
+                        phone: Some(row.get(4).unwrap()),
+                    })
+                },
+            )
+            .unwrap();
+
+        // Testing "update" aspect of save method.
+        assert!(company == db_data_change);
     }
 }
