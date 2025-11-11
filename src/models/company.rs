@@ -61,15 +61,17 @@ impl Company {
             "SELECT id, name, address, website, phone FROM company WHERE id = ?1",
             [&id],
             |row| {
-                // TODO: Fix this. This can be None or Some. Need to add the check and
-                // pick the right value to set.
-                let website_string: String = row.get(3).unwrap();
+                let website_option: Option<String> = row.get(3).ok();
+                let website_row = match website_option {
+                    Some(website) => Some(Url::parse(website.as_str()).unwrap()),
+                    None => None,
+                };
 
                 Ok(Company {
                     id: row.get(0).ok(),
                     name: row.get(1).ok(),
                     address: row.get(2).ok(),
-                    website: Some(Url::parse(website_string.as_str()).unwrap()),
+                    website: website_row,
                     phone: row.get(4).ok(),
                 })
             },
@@ -144,9 +146,7 @@ mod test {
                 `cargo test -- --no-capture`
 
             The first table stuff get printed to stdout.
-
-        TODO: figure out how I want to go about saving stuff...
-             */
+        */
         let _ = conn.query_row("select * from sqlite_master;", [], |row| {
             println!("{row:?}");
             Ok(())
@@ -259,15 +259,18 @@ mod test {
                 "SELECT id, name, address, website, phone FROM company WHERE id = ?1",
                 [&company.id],
                 |row| {
-                    let website_string: String = row.get(3).unwrap();
+                    let website_option: Option<String> = row.get(3).ok();
+                    let website_row = match website_option {
+                        Some(website) => Some(Url::parse(website.as_str()).unwrap()),
+                        None => None,
+                    };
 
-                    // TODO: change unwrap() to ok()
                     Ok(Company {
-                        id: Some(row.get(0).unwrap()),
-                        name: Some(row.get(1).unwrap()),
-                        address: Some(row.get(2).unwrap()),
-                        website: Some(Url::parse(website_string.as_str()).unwrap()),
-                        phone: Some(row.get(4).unwrap()),
+                        id: row.get(0).ok(),
+                        name: row.get(1).ok(),
+                        address: row.get(2).ok(),
+                        website: website_row,
+                        phone: row.get(4).ok(),
                     })
                 },
             )
@@ -288,15 +291,18 @@ mod test {
                 "SELECT id, name, address, website, phone FROM company WHERE id = ?1",
                 [&company.id],
                 |row| {
-                    let website_string: String = row.get(3).unwrap();
+                    let website_option: Option<String> = row.get(3).ok();
+                    let website_row = match website_option {
+                        Some(website) => Some(Url::parse(website.as_str()).unwrap()),
+                        None => None,
+                    };
 
-                    // TODO: change unwrap() to ok()
                     Ok(Company {
-                        id: Some(row.get(0).unwrap()),
-                        name: Some(row.get(1).unwrap()),
-                        address: Some(row.get(2).unwrap()),
-                        website: Some(Url::parse(website_string.as_str()).unwrap()),
-                        phone: Some(row.get(4).unwrap()),
+                        id: row.get(0).ok(),
+                        name: row.get(1).ok(),
+                        address: row.get(2).ok(),
+                        website: website_row,
+                        phone: row.get(4).ok(),
                     })
                 },
             )

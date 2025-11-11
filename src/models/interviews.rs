@@ -1,16 +1,16 @@
 use chrono::{DateTime, Utc};
 use url::Url;
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Default, PartialEq, Clone)]
 pub struct Interview {
-    pub id: Option<u32>,
+    pub id: Option<i64>,
     pub url: Option<Url>,
     pub date: Option<DateTime<Utc>>,
     pub description: Option<String>,
-    pub interview_type: Option<u32>, // Need to change the schema/model to add "_id"
-    pub company_id: Option<u32>,
-    pub recruiter_id: Option<u32>,
-    pub contact_id: Option<u32>,
+    pub interview_type: Option<i64>, // Need to change the schema/model to add "_id"
+    pub company_id: Option<i64>,
+    pub recruiter_id: Option<i64>,
+    pub contact_id: Option<i64>,
 }
 
 #[cfg(test)]
