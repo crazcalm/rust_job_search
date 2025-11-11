@@ -151,7 +151,114 @@ impl JobPosting {
 mod test {
     use super::*;
     use chrono::{DateTime, Utc};
+    use rusqlite::Connection;
     use url::Url;
+
+    fn run_migrations() -> Connection {
+        refinery::embed_migrations!("migrations");
+        let mut conn = Connection::open_in_memory().unwrap();
+        migrations::runner().run(&mut conn).unwrap();
+
+        /*
+                You can verify that the migrations are running with
+                `cargo test -- --no-capture`
+
+            The first table stuff get printed to stdout.
+
+        TODO: figure out how I want to go about saving stuff...
+             */
+        let _ = conn.query_row("select * from sqlite_master;", [], |row| {
+            println!("{row:?}");
+            Ok(())
+        });
+
+        conn
+    }
+
+    #[test]
+    fn test_get_method() {
+        let conn = run_migrations();
+
+        let mut job_posting = JobPosting {
+            id: None,
+            url: Some(Url::parse("http://test.com").unwrap()),
+            date_applied: Some(Utc::now()),
+            interviewed: Some(true),
+            description: Some("description".to_string()),
+            company_id: None,
+            recruiter_id: None,
+            contact_id: None,
+        };
+        job_posting.save(&conn);
+
+        let job_posting_from_db = JobPosting::get(&conn, job_posting.id.unwrap()).unwrap();
+
+        assert!(job_posting == job_posting_from_db);
+    }
+
+    #[test]
+    fn test_save_method() {
+        let conn = run_migrations();
+
+        let mut job_posting = JobPosting {
+            id: None,
+            url: Some(Url::parse("http://test.com").unwrap()),
+            date_applied: Some(Utc::now()),
+            interviewed: Some(true),
+            description: Some("description".to_string()),
+            company_id: None,
+            recruiter_id: None,
+            contact_id: None,
+        };
+        job_posting.save(&conn);
+
+        let db_data = conn.query_row(
+            "SELECT id, url, date_applied, description, interviewed, company_id, recruiter_id, contact_id FROM job_posting WHERE id = ?1",
+            [&job_posting.id],
+            |row| {
+                Ok(JobPosting{
+                    id: row.get(0).ok(),
+                    url: row.get(1).ok(),
+                    date_applied: row.get(2).ok(),
+                    description: row.get(3).ok(),
+                    interviewed: row.get(4).ok(),
+                    company_id: row.get(5).ok(),
+		    recruiter_id: row.get(6).ok(),
+		    contact_id: row.get(7).ok(),
+                })
+            },
+        ).unwrap();
+
+        // Testing "create" aspect of save method.
+        assert!(job_posting == db_data);
+
+        job_posting.set_url(Url::parse("http://url.com").unwrap());
+        job_posting.set_description("New Description".to_string());
+        job_posting.set_date_applied(Utc::now());
+        job_posting.set_interviewed(false);
+
+        job_posting.save(&conn);
+
+        let db_data_change = conn.query_row(
+            "SELECT id, url, date_applied, description, interviewed, company_id, recruiter_id, contact_id FROM job_posting WHERE id = ?1",
+            [&job_posting.id],
+            |row| {
+                Ok(JobPosting {
+                    id: row.get(0).ok(),
+                    url: row.get(1).ok(),
+                    date_applied: row.get(2).ok(),
+                    description: row.get(3).ok(),
+                    interviewed: row.get(4).ok(),
+                    company_id: row.get(5).ok(),
+		    recruiter_id: row.get(6).ok(),
+		    contact_id: row.get(7).ok(),
+                })
+            },
+        ).unwrap();
+
+        // Testing "update" aspect of save method.
+        assert!(job_posting == db_data_change);
+    }
 
     #[test]
     fn test_update_method() {
