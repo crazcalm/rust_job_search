@@ -56,45 +56,26 @@ impl Company {
 }
 
 impl Company {
-    fn get(conn: &Connection, id: i64) -> Result<Self, rusqlite::Error> {
+    pub fn get(conn: &Connection, id: i64) -> Result<Self, rusqlite::Error> {
         conn.query_row(
             "SELECT id, name, address, website, phone FROM company WHERE id = ?1",
             [&id],
             |row| {
+                // TODO: Fix this. This can be None or Some. Need to add the check and
+                // pick the right value to set.
                 let website_string: String = row.get(3).unwrap();
 
                 Ok(Company {
-                    id: Some(row.get(0).unwrap()),
-                    name: Some(row.get(1).unwrap()),
-                    address: Some(row.get(2).unwrap()),
+                    id: row.get(0).ok(),
+                    name: row.get(1).ok(),
+                    address: row.get(2).ok(),
                     website: Some(Url::parse(website_string.as_str()).unwrap()),
-                    phone: Some(row.get(4).unwrap()),
+                    phone: row.get(4).ok(),
                 })
             },
         )
     }
-    fn save(&mut self, conn: &Connection) {
-        /*
-            If there is not ID, we create an entry, get the ID saved and add it back to this instance.
-
-            If there is an ID, we updating the entry in the database.
-
-        Table Notes:
-        table_name: company
-        Fields:
-        - id
-        - name
-        - address
-        - website
-        - phone
-
-        Insert example:
-        INSERT INTO company (name, address, website, phone) VALUES (name, address, website phone)
-
-        Update example:
-        UPDATE company SET name="", address="", website="", phone="" where id = id;
-         */
-
+    pub fn save(&mut self, conn: &Connection) {
         match self.id {
             Some(id) => {
                 // TODO: Log the result which has usize representing how many rows were affected
@@ -103,10 +84,10 @@ impl Company {
                         "UPDATE company SET name=?2, address=?3, website=?4, phone=?5 where id =?1",
                         (
                             &id,
-                            &self.name.as_ref().unwrap(),
-                            &self.address.as_ref().unwrap(),
-                            &self.website.as_ref().unwrap().as_str(),
-                            &self.phone.as_ref().unwrap(),
+                            &self.name.as_ref(),
+                            &self.address.as_ref(),
+                            &self.website.as_ref(),
+                            &self.phone.as_ref(),
                         ),
                     )
                     .unwrap();
@@ -116,10 +97,10 @@ impl Company {
                 let _ = conn.execute(
                 "INSERT INTO company (name, address, website, phone) VALUES (?1, ?2, ?3, ?4)",
                 (
-                    &self.name.as_ref().unwrap(),
-                    &self.address.as_ref().unwrap(),
-                    &self.website.as_ref().unwrap().as_str(),
-                    &self.phone.as_ref().unwrap(),
+                    &self.name.as_ref(),
+                    &self.address.as_ref(),
+                    &self.website.as_ref(),
+                    &self.phone.as_ref(),
                 ),
 		).unwrap();
 
@@ -280,6 +261,7 @@ mod test {
                 |row| {
                     let website_string: String = row.get(3).unwrap();
 
+                    // TODO: change unwrap() to ok()
                     Ok(Company {
                         id: Some(row.get(0).unwrap()),
                         name: Some(row.get(1).unwrap()),
@@ -308,6 +290,7 @@ mod test {
                 |row| {
                     let website_string: String = row.get(3).unwrap();
 
+                    // TODO: change unwrap() to ok()
                     Ok(Company {
                         id: Some(row.get(0).unwrap()),
                         name: Some(row.get(1).unwrap()),
