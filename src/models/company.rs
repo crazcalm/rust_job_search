@@ -56,6 +56,34 @@ impl Company {
 }
 
 impl Company {
+    pub fn get_all(conn: &Connection) -> Result<Vec<Self>, rusqlite::Error> {
+        let mut stmt = conn.prepare("SELECT id, name, address, website, phone FROM company")?;
+        let rows = stmt
+            .query_map([], |row| {
+                let website_option: Option<String> = row.get(3).ok();
+                let website_row = match website_option {
+                    Some(website) => Some(Url::parse(website.as_str()).unwrap()),
+                    None => None,
+                };
+
+                Ok(Self {
+                    id: row.get(0).ok(),
+                    name: row.get(1).ok(),
+                    address: row.get(2).ok(),
+                    website: website_row,
+                    phone: row.get(4).ok(),
+                })
+            })
+            .unwrap();
+
+        let mut results = Vec::new();
+        for row in rows {
+            results.push(row?)
+        }
+
+        Ok(results)
+    }
+
     pub fn get(conn: &Connection, id: i64) -> Result<Self, rusqlite::Error> {
         conn.query_row(
             "SELECT id, name, address, website, phone FROM company WHERE id = ?1",
@@ -119,39 +147,11 @@ mod test {
     use url::Url;
 
     use super::*;
-
-    /*
-    use log::info;
-    use refinery::Migration;
-    use rusqlite::Connection;
-
-    refinery::embed_migrations!("migrations");
-
-    fn main() {
-        let mut conn = Connection::open_in_memory().unwrap();
-
-        // or run all migrations in one go
-        migrations::runner().run(&mut conn).unwrap();
-
-    }
-        */
+    use crate::db;
 
     fn run_migrations() -> Connection {
-        refinery::embed_migrations!("migrations");
-        let mut conn = Connection::open_in_memory().unwrap();
-        migrations::runner().run(&mut conn).unwrap();
-
-        /*
-                You can verify that the migrations are running with
-                `cargo test -- --no-capture`
-
-            The first table stuff get printed to stdout.
-        */
-        let _ = conn.query_row("select * from sqlite_master;", [], |row| {
-            println!("{row:?}");
-            Ok(())
-        });
-
+        let mut conn = db::get_connection(db::ConnectionType::InMemory).unwrap();
+        db::run_migrations(&mut conn).unwrap();
         conn
     }
 
@@ -222,6 +222,32 @@ mod test {
         company.set_website(expected.website.clone().unwrap());
 
         assert!(company == expected);
+    }
+
+    #[test]
+    fn test_get_all() {
+        let conn = run_migrations();
+        let mut company_1 = Company {
+            id: None,
+            name: Some("test_name".to_string()),
+            address: Some("test address".to_string()),
+            phone: Some("test phone".to_string()),
+            website: Some(Url::parse("http://test-website.com").unwrap()),
+        };
+        company_1.save(&conn);
+
+        let mut company_2 = Company {
+            id: None,
+            name: Some("test_name".to_string()),
+            address: Some("test address".to_string()),
+            phone: Some("test phone".to_string()),
+            website: Some(Url::parse("http://test-website.com").unwrap()),
+        };
+        company_2.save(&conn);
+
+        let results = Company::get_all(&conn).unwrap();
+
+        assert!(results == vec![company_1, company_2]);
     }
 
     #[test]
