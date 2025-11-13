@@ -1,6 +1,6 @@
 use crate::models::Company;
 use crate::ui::create_company;
-use crate::ui::{Counter, CreateCompanyUI};
+use crate::ui::{Application, Counter, CreateCompanyUI};
 
 pub mod models;
 pub mod ui;
@@ -14,8 +14,8 @@ fn main() {
         phone: None,
     };
 
-    iced::application("Example", CreateCompanyUI::update, CreateCompanyUI::view)
-        .subscription(CreateCompanyUI::subscription)
+    iced::application("Example", Application::update, Application::view)
+        .subscription(Application::subscription)
         .run()
         .unwrap();
 

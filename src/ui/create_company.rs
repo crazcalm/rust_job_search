@@ -47,6 +47,7 @@ impl CreateCompanyUI {
             }
             Message::Save => {
                 println!("Save was pushed");
+                println!("{self:?}");
                 Task::none()
             }
             Message::Cancel => {
