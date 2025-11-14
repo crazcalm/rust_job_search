@@ -3,6 +3,11 @@ use iced::keyboard::{self, key};
 use iced::widget::{self, button, column, container, row, text, text_input};
 use iced::{Center, Element, Subscription, Task};
 
+use crate::db;
+use crate::models::Company;
+use crate::DB_PATH;
+use url::Url;
+
 #[derive(Default, Debug)]
 pub struct CreateCompanyUI {
     name: String,
@@ -20,6 +25,31 @@ pub enum Message {
     Save,
     Cancel,
     Event(Event),
+}
+
+impl CreateCompanyUI {
+    pub fn reset(&mut self) {
+        self.name = String::new();
+        self.address = String::new();
+        self.website = String::new();
+        self.phone = String::new();
+    }
+    pub fn save(&self) -> Result<(), rusqlite::Error> {
+        let mut company: Company = Default::default();
+
+        company.set_name(self.name.clone());
+        company.set_address(self.address.clone());
+        company.set_website(
+            Url::parse(self.website.clone().as_str()).expect("unable to parse string to url"),
+        );
+        company.set_phone(self.phone.clone());
+
+        let conn = db::get_connection(db::ConnectionType::Path(DB_PATH.to_string()))
+            .expect("unable to get database connection");
+
+        company.save(&conn);
+        Ok(())
+    }
 }
 
 impl CreateCompanyUI {
@@ -47,7 +77,8 @@ impl CreateCompanyUI {
             }
             Message::Save => {
                 println!("Save was pushed");
-                println!("{self:?}");
+                self.save();
+                self.reset();
                 Task::none()
             }
             Message::Cancel => {
@@ -111,13 +142,3 @@ impl CreateCompanyUI {
         .into()
     }
 }
-
-/*
-let test_company = Company {
-        id: None,
-        name: Some("name".to_string()),
-        address: None,
-        website: None,
-        phone: None,
-    };
-*/

@@ -11,28 +11,28 @@ pub struct Company {
 }
 
 impl Company {
-    fn set_id(&mut self, id: i64) {
+    pub fn set_id(&mut self, id: i64) {
         // Note: Changed from u32 to i64 because the "last_inserted_row_id" returns i64
         self.id = Some(id);
     }
 
-    fn set_name(&mut self, name: String) {
+    pub fn set_name(&mut self, name: String) {
         self.name = Some(name);
     }
 
-    fn set_address(&mut self, address: String) {
+    pub fn set_address(&mut self, address: String) {
         self.address = Some(address);
     }
 
-    fn set_website(&mut self, website: Url) {
+    pub fn set_website(&mut self, website: Url) {
         self.website = Some(website);
     }
 
-    fn set_phone(&mut self, phone: String) {
+    pub fn set_phone(&mut self, phone: String) {
         self.phone = Some(phone);
     }
 
-    fn update(&mut self, other: &Self) {
+    pub fn update(&mut self, other: &Self) {
         if other.id.is_some() {
             self.set_id(other.id.unwrap());
         }

@@ -21,11 +21,8 @@ fn main() {
     };
     test_company.save(&conn);
     */
-    /*
     iced::application("Example", Application::update, Application::view)
         .subscription(Application::subscription)
         .run()
         .unwrap();
-    */
-    println!("Hello -- {test_company:?}");
 }
