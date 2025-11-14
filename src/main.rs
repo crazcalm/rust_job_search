@@ -1,6 +1,6 @@
 use crate::models::Company;
 use crate::ui::create_company;
-use crate::ui::{Application, Counter, CreateCompanyUI, ViewCompaniesUI};
+use crate::ui::{Application, Counter, CreateCompanyUI, ViewCompaniesUI, WelcomePageUI};
 
 pub mod db;
 pub mod models;
@@ -21,14 +21,15 @@ fn main() {
     };
     test_company.save(&conn);
      */
-    /*
+
     iced::application("Example", Application::update, Application::view)
         .subscription(Application::subscription)
         .run()
-    .unwrap();
-     */
-
-    iced::application("Example", ViewCompaniesUI::update, ViewCompaniesUI::view)
-        .run()
         .unwrap();
+
+    /*
+    iced::application("Example", WelcomePageUI::update, WelcomePageUI::view)
+        .run()
+    .unwrap();
+    */
 }

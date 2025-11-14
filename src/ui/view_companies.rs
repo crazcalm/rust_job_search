@@ -26,14 +26,33 @@ impl Default for ViewCompaniesUI {
         Self { rows }
     }
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Message {
     RowMessage(usize, RowMessage),
+    AddCompany,
+    WelcomePage,
 }
 
 impl ViewCompaniesUI {
     pub fn update(&mut self, message: Message) -> Task<Message> {
-        Task::none()
+        match message {
+            Message::RowMessage(i, message) => {
+                if let Some(row) = self.rows.get_mut(i) {
+                    row.update(message);
+                }
+
+                Task::none()
+            }
+            Message::AddCompany => {
+                println!("AddCompany via ViewCompaniesUI::update");
+                Task::none()
+            }
+            Message::WelcomePage => {
+                println!("WelcomePage via ViewCompaniesUI::update");
+                Task::none()
+            }
+            _ => Task::none(),
+        }
     }
 
     pub fn view(&self) -> Element<Message> {
@@ -45,9 +64,19 @@ impl ViewCompaniesUI {
             )
         }));
 
-        container(column![text("View Companies"), rows].spacing(10))
-            .width(Fill)
-            .into()
+        container(
+            column![
+                text("View Companies"),
+                rows,
+                row![
+                    button("Welcome Page").on_press(Message::WelcomePage),
+                    button("Add Company").on_press(Message::AddCompany),
+                ]
+            ]
+            .spacing(10),
+        )
+        .width(Fill)
+        .into()
     }
 }
 
@@ -57,8 +86,10 @@ pub struct RowUI {
     company: Company,
 }
 
-#[derive(Debug)]
-pub enum RowMessage {}
+#[derive(Debug, Clone)]
+pub enum RowMessage {
+    ClickedButton,
+}
 
 impl RowUI {
     pub fn new(id: usize, company: Company) -> Self {
@@ -66,13 +97,20 @@ impl RowUI {
     }
 
     pub fn update(&mut self, message: RowMessage) -> Task<RowMessage> {
-        Task::none()
+        match message {
+            RowMessage::ClickedButton => {
+                println!("Button was pushed for {self:?}");
+                Task::none()
+            }
+            _ => Task::none(),
+        }
     }
 
     pub fn view(&self, _i: usize) -> Element<RowMessage> {
         row![
             text(self.company.name.clone().unwrap_or_default()),
             text(self.company.website.as_ref().unwrap().to_string()),
+            button("hit me").on_press(RowMessage::ClickedButton),
         ]
         .padding(10)
         .spacing(20)
