@@ -1,6 +1,6 @@
 use crate::models::Company;
 use crate::ui::create_company;
-use crate::ui::{Application, Counter, CreateCompanyUI};
+use crate::ui::{Application, Counter, CreateCompanyUI, ViewCompaniesUI};
 
 pub mod db;
 pub mod models;
@@ -20,9 +20,15 @@ fn main() {
         phone: Some("1111111111".to_string()),
     };
     test_company.save(&conn);
-    */
+     */
+    /*
     iced::application("Example", Application::update, Application::view)
         .subscription(Application::subscription)
+        .run()
+    .unwrap();
+     */
+
+    iced::application("Example", ViewCompaniesUI::update, ViewCompaniesUI::view)
         .run()
         .unwrap();
 }
