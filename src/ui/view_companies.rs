@@ -3,9 +3,9 @@ use iced::keyboard::{self, key};
 use iced::widget::{self, button, column, container, keyed_column, row, text, text_input};
 use iced::{Center, Element, Fill, Subscription, Task};
 
+use crate::DB_PATH;
 use crate::db;
 use crate::models::Company;
-use crate::DB_PATH;
 
 #[derive(Debug)]
 pub struct ViewCompaniesUI {

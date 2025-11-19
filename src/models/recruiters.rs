@@ -119,7 +119,7 @@ impl Recruiter {
 #[cfg(test)]
 mod test {
     use super::*;
-    use refinery::{embed_migrations, Migration};
+    use refinery::{Migration, embed_migrations};
     use rusqlite::Connection;
     use url::Url;
 

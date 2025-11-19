@@ -1,4 +1,4 @@
-use refinery::{embed_migrations, Migration};
+use refinery::{Migration, embed_migrations};
 use rusqlite::Connection;
 
 pub enum ConnectionType {
