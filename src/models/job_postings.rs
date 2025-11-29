@@ -10,17 +10,12 @@ pub struct JobPosting {
     pub description: Option<String>,
     pub interviewed: Option<bool>,
     pub company_id: Option<i64>,
-    pub recruiter_id: Option<i64>,
     pub contact_id: Option<i64>,
 }
 
 impl JobPosting {
     pub fn set_contact_id(&mut self, contact_id: i64) {
         self.contact_id = Some(contact_id);
-    }
-
-    pub fn set_recruiter_id(&mut self, recruiter_id: i64) {
-        self.recruiter_id = Some(recruiter_id);
     }
 
     pub fn set_company_id(&mut self, company_id: i64) {
@@ -67,9 +62,6 @@ impl JobPosting {
         if other.company_id.is_some() {
             self.set_company_id(other.company_id.clone().unwrap());
         }
-        if other.recruiter_id.is_some() {
-            self.set_recruiter_id(other.recruiter_id.clone().unwrap());
-        }
         if other.contact_id.is_some() {
             self.set_contact_id(other.contact_id.clone().unwrap());
         }
@@ -79,7 +71,7 @@ impl JobPosting {
 impl JobPosting {
     fn get(conn: &Connection, id: i64) -> Result<Self, rusqlite::Error> {
         conn.query_row(
-            "SELECT id, url, date_applied, description, interviewed, company_id, recruiter_id, contact_id FROM job_posting WHERE id = ?1",
+            "SELECT id, url, date_applied, description, interviewed, company_id, contact_id FROM job_posting WHERE id = ?1",
             [&id],
             |row| {
                 Ok(Self {
@@ -89,30 +81,18 @@ impl JobPosting {
                     description: row.get(3).ok(),
                     interviewed: row.get(4).ok(),
                     company_id: row.get(5).ok(),
-		    recruiter_id: row.get(6).ok(),
-		    contact_id: row.get(7).ok(),
+		    contact_id: row.get(6).ok(),
                 })
             },
         )
     }
     fn save(&mut self, conn: &Connection) {
-        /*
-        pub id: Option<i64>,
-            pub url: Option<Url>,
-            pub date_applied: Option<DateTime<Utc>>,
-            pub description: Option<String>,
-            pub interviewed: Option<bool>,
-            pub company_id: Option<i64>,
-            pub recruiter_id: Option<i64>,
-            pub contact_id: Option<i64>,
-             */
-
         match self.id {
             Some(id) => {
                 // TODO: Log the result which has usize representing how many rows were affected
                 let _ = conn
                     .execute(
-                        "UPDATE job_posting SET url=?2, date_applied=?3, description=?4, interviewed=?5, company_id=?6, recruiter_id=?7, contact_id=?8 where id =?1",
+                        "UPDATE job_posting SET url=?2, date_applied=?3, description=?4, interviewed=?5, company_id=?6, contact_id=?7 where id =?1",
                         (
                             &id,
                             &self.url.as_ref(),
@@ -120,7 +100,6 @@ impl JobPosting {
                             &self.description.as_ref(),
                             &self.interviewed.as_ref(),
 			    &self.company_id.as_ref(),
-			    &self.recruiter_id.as_ref(),
 			    &self.contact_id.as_ref(),
                         ),
                     )
@@ -129,14 +108,13 @@ impl JobPosting {
             None => {
                 // TODO: Log the result which has usize representing how many rows were affected
                 let _ = conn.execute(
-                "INSERT INTO job_posting (url, date_applied, description, interviewed, company_id, recruiter_id, contact_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                "INSERT INTO job_posting (url, date_applied, description, interviewed, company_id, contact_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
                 (
                     &self.url.as_ref(),
                     &self.date_applied.as_ref(),
                     &self.description.as_ref(),
                     &self.interviewed.as_ref(),
 		    &self.company_id.as_ref(),
-		    &self.recruiter_id.as_ref(),
 		    &self.contact_id.as_ref(),
                 ),
 		).unwrap();
@@ -186,7 +164,6 @@ mod test {
             interviewed: Some(true),
             description: Some("description".to_string()),
             company_id: None,
-            recruiter_id: None,
             contact_id: None,
         };
         job_posting.save(&conn);
@@ -207,13 +184,12 @@ mod test {
             interviewed: Some(true),
             description: Some("description".to_string()),
             company_id: None,
-            recruiter_id: None,
             contact_id: None,
         };
         job_posting.save(&conn);
 
         let db_data = conn.query_row(
-            "SELECT id, url, date_applied, description, interviewed, company_id, recruiter_id, contact_id FROM job_posting WHERE id = ?1",
+            "SELECT id, url, date_applied, description, interviewed, company_id, contact_id FROM job_posting WHERE id = ?1",
             [&job_posting.id],
             |row| {
                 Ok(JobPosting{
@@ -223,8 +199,7 @@ mod test {
                     description: row.get(3).ok(),
                     interviewed: row.get(4).ok(),
                     company_id: row.get(5).ok(),
-		    recruiter_id: row.get(6).ok(),
-		    contact_id: row.get(7).ok(),
+		    contact_id: row.get(6).ok(),
                 })
             },
         ).unwrap();
@@ -240,7 +215,7 @@ mod test {
         job_posting.save(&conn);
 
         let db_data_change = conn.query_row(
-            "SELECT id, url, date_applied, description, interviewed, company_id, recruiter_id, contact_id FROM job_posting WHERE id = ?1",
+            "SELECT id, url, date_applied, description, interviewed, company_id, contact_id FROM job_posting WHERE id = ?1",
             [&job_posting.id],
             |row| {
                 Ok(JobPosting {
@@ -250,8 +225,7 @@ mod test {
                     description: row.get(3).ok(),
                     interviewed: row.get(4).ok(),
                     company_id: row.get(5).ok(),
-		    recruiter_id: row.get(6).ok(),
-		    contact_id: row.get(7).ok(),
+		    contact_id: row.get(6).ok(),
                 })
             },
         ).unwrap();
@@ -269,7 +243,6 @@ mod test {
             interviewed: Some(true),
             description: Some("description".to_string()),
             company_id: Some(4),
-            recruiter_id: Some(5),
             contact_id: Some(6),
         };
 
@@ -286,7 +259,6 @@ mod test {
             interviewed: Some(false),
             description: Some("description2".to_string()),
             company_id: Some(41),
-            recruiter_id: Some(51),
             contact_id: Some(61),
         };
 
@@ -303,7 +275,6 @@ mod test {
             interviewed: Some(true),
             description: Some("description".to_string()),
             company_id: Some(4),
-            recruiter_id: Some(5),
             contact_id: Some(6),
         };
 
@@ -314,7 +285,6 @@ mod test {
         result.set_description(expected.description.clone().unwrap());
         result.set_interviewed(expected.interviewed.clone().unwrap());
         result.set_company_id(expected.company_id.clone().unwrap());
-        result.set_recruiter_id(expected.recruiter_id.clone().unwrap());
         result.set_contact_id(expected.contact_id.clone().unwrap());
 
         assert!(result == expected);
@@ -328,7 +298,6 @@ mod test {
             description: None,
             interviewed: None,
             company_id: None,
-            recruiter_id: None,
             contact_id: None,
             date_applied: None,
         };

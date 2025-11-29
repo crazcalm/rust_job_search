@@ -8,6 +8,9 @@ pub struct Contact {
     pub phone: Option<String>,
     pub description: Option<String>,
     pub company_id: Option<i64>,
+    pub recruiter: Option<bool>,
+    pub interviewer: Option<bool>,
+    pub other: Option<bool>,
 }
 
 impl Contact {
@@ -31,6 +34,15 @@ impl Contact {
     }
     fn set_company_id(&mut self, company_id: i64) {
         self.company_id = Some(company_id);
+    }
+    fn set_interviewer(&mut self, value: bool) {
+        self.interviewer = Some(value);
+    }
+    fn set_recruiter(&mut self, value: bool) {
+        self.recruiter = Some(value);
+    }
+    fn set_other(&mut self, value: bool) {
+        self.other = Some(value);
     }
 
     fn update(&mut self, other: &Self) {
@@ -57,13 +69,23 @@ impl Contact {
         if other.company_id.is_some() {
             self.set_company_id(other.company_id.clone().unwrap());
         }
+
+        if other.interviewer.is_some() {
+            self.set_interviewer(other.interviewer.clone().unwrap());
+        }
+        if other.recruiter.is_some() {
+            self.set_recruiter(other.recruiter.clone().unwrap());
+        }
+        if other.other.is_some() {
+            self.set_other(other.other.clone().unwrap());
+        }
     }
 }
 
 impl Contact {
     fn get(conn: &Connection, id: i64) -> Result<Self, rusqlite::Error> {
         conn.query_row(
-            "SELECT id, name, email, phone, description, company_id FROM contacts WHERE id = ?1",
+            "SELECT id, name, email, phone, description, company_id, recruiter, interviewer, other FROM contacts WHERE id = ?1",
             [&id],
             |row| {
                 Ok(Self {
@@ -73,6 +95,9 @@ impl Contact {
                     phone: row.get(3).ok(),
                     description: row.get(4).ok(),
                     company_id: row.get(5).ok(),
+		    recruiter: row.get(6).ok(),
+		    interviewer: row.get(7).ok(),
+		    other: row.get(8).ok(),
                 })
             },
         )
@@ -83,7 +108,7 @@ impl Contact {
                 // TODO: Log the result which has usize representing how many rows were affected
                 let _ = conn
                     .execute(
-                        "UPDATE contacts SET name=?2, email=?3, phone=?4, description=?5, company_id=?6 where id =?1",
+                        "UPDATE contacts SET name=?2, email=?3, phone=?4, description=?5, company_id=?6, recruiter=?7, interviewer=?8, other=?9 where id =?1",
                         (
                             &id,
                             &self.name.as_ref(),
@@ -91,6 +116,9 @@ impl Contact {
                             &self.phone.as_ref(),
                             &self.description.as_ref(),
 			    &self.company_id.as_ref(),
+			    &self.recruiter.as_ref(),
+			    &self.interviewer.as_ref(),
+			    &self.other.as_ref()
                         ),
                     )
                     .unwrap();
@@ -98,13 +126,16 @@ impl Contact {
             None => {
                 // TODO: Log the result which has usize representing how many rows were affected
                 let _ = conn.execute(
-                "INSERT INTO contacts (name, email, phone, description, company_id) VALUES (?1, ?2, ?3, ?4, ?5)",
+                "INSERT INTO contacts (name, email, phone, description, company_id, recruiter, interviewer, other) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
                 (
                     &self.name.as_ref(),
                     &self.email.as_ref(),
                     &self.phone.as_ref(),
                     &self.description.as_ref(),
 		    &self.company_id.as_ref(),
+		    &self.recruiter.as_ref(),
+		    &self.interviewer.as_ref(),
+		    &self.other.as_ref(),
                 ),
 		).unwrap();
 
@@ -153,6 +184,9 @@ mod test {
             phone: Some("phone".to_string()),
             description: Some("description".to_string()),
             company_id: Some(4),
+            recruiter: Some(false),
+            interviewer: Some(false),
+            other: Some(false),
         };
 
         let original = result.clone();
@@ -168,6 +202,9 @@ mod test {
             phone: Some("phone2".to_string()),
             description: Some("description2".to_string()),
             company_id: Some(6),
+            recruiter: Some(true),
+            interviewer: Some(true),
+            other: Some(true),
         };
 
         result.update(&update_all);
@@ -183,6 +220,9 @@ mod test {
             phone: Some("phone".to_string()),
             description: Some("description".to_string()),
             company_id: Some(4),
+            recruiter: Some(false),
+            interviewer: Some(false),
+            other: Some(false),
         };
 
         let mut result: Contact = Default::default();
@@ -192,6 +232,9 @@ mod test {
         result.set_description(expected.description.clone().unwrap());
         result.set_email(expected.email.clone().unwrap());
         result.set_company_id(expected.company_id.clone().unwrap());
+        result.set_recruiter(expected.recruiter.clone().unwrap());
+        result.set_interviewer(expected.interviewer.clone().unwrap());
+        result.set_other(expected.other.clone().unwrap());
 
         assert!(result == expected);
     }
@@ -205,6 +248,9 @@ mod test {
             phone: None,
             description: None,
             company_id: None,
+            recruiter: None,
+            interviewer: None,
+            other: None,
         };
         let result: Contact = Default::default();
 
@@ -231,6 +277,9 @@ mod test {
             description: Some("test description".to_string()),
             phone: Some("test phone".to_string()),
             company_id: Some(company.id.unwrap()),
+            recruiter: Some(false),
+            interviewer: Some(false),
+            other: Some(false),
         };
         contact.save(&conn);
 
@@ -250,12 +299,15 @@ mod test {
             phone: Some("test phone".to_string()),
             description: Some("test description".to_string()),
             company_id: None,
+            recruiter: Some(false),
+            interviewer: Some(false),
+            other: Some(false),
         };
         contact.save(&conn);
 
         let db_data = conn
             .query_row(
-                "SELECT id, name, email, phone, description, company_id FROM contacts WHERE id = ?1",
+                "SELECT id, name, email, phone, description, company_id, recruiter, interviewer, other FROM contacts WHERE id = ?1",
                 [&contact.id],
                 |row| {
                     Ok(Contact {
@@ -264,7 +316,10 @@ mod test {
 			email: row.get(2).ok(),
                         phone: row.get(3).ok(),
                        description: row.get(4).ok(),
-		       company_id: row.get(5).ok(),
+			company_id: row.get(5).ok(),
+			recruiter: row.get(6).ok(),
+		    interviewer: row.get(7).ok(),
+		    other: row.get(8).ok(),
                     })
                 },
             )
@@ -282,7 +337,7 @@ mod test {
 
         let db_data_change = conn
             .query_row(
-                "SELECT id, name, email, phone, description, company_id FROM contacts WHERE id = ?1",
+                "SELECT id, name, email, phone, description, company_id, recruiter, interviewer, other FROM contacts WHERE id = ?1",
                 [&contact.id],
                 |row| {
                     Ok(Contact {
@@ -291,7 +346,10 @@ mod test {
 			email: row.get(2).ok(),
                         phone: row.get(3).ok(),
                        description: row.get(4).ok(),
-		       company_id: row.get(5).ok(),
+			company_id: row.get(5).ok(),
+			recruiter: row.get(6).ok(),
+		    interviewer: row.get(7).ok(),
+		    other: row.get(8).ok(),
                     })
                 },
             )

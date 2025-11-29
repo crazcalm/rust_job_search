@@ -10,17 +10,12 @@ pub struct Interview {
     pub description: Option<String>,
     pub interview_type: Option<i64>, // Need to change the schema/model to add "_id"
     pub company_id: Option<i64>,
-    pub recruiter_id: Option<i64>,
     pub contact_id: Option<i64>,
 }
 
 impl Interview {
     pub fn set_contact_id(&mut self, contact_id: i64) {
         self.contact_id = Some(contact_id);
-    }
-
-    pub fn set_recruiter_id(&mut self, recruiter_id: i64) {
-        self.recruiter_id = Some(recruiter_id);
     }
 
     pub fn set_company_id(&mut self, company_id: i64) {
@@ -67,9 +62,6 @@ impl Interview {
         if other.company_id.is_some() {
             self.set_company_id(other.company_id.clone().unwrap());
         }
-        if other.recruiter_id.is_some() {
-            self.set_recruiter_id(other.recruiter_id.clone().unwrap());
-        }
         if other.contact_id.is_some() {
             self.set_contact_id(other.contact_id.clone().unwrap());
         }
@@ -79,7 +71,7 @@ impl Interview {
 impl Interview {
     fn get(conn: &Connection, id: i64) -> Result<Self, rusqlite::Error> {
         conn.query_row(
-            "SELECT id, url, date, description, interview_type, company_id, recruiter_id, contact_id FROM interviews WHERE id = ?1",
+            "SELECT id, url, date, description, interview_type, company_id, contact_id FROM interviews WHERE id = ?1",
             [&id],
             |row| {
                 Ok(Self {
@@ -89,8 +81,7 @@ impl Interview {
                     description: row.get(3).ok(),
                     interview_type: row.get(4).ok(),
                     company_id: row.get(5).ok(),
-		    recruiter_id: row.get(6).ok(),
-		    contact_id: row.get(7).ok(),
+		    contact_id: row.get(6).ok(),
                 })
             },
         )
@@ -101,7 +92,7 @@ impl Interview {
                 // TODO: Log the result which has usize representing how many rows were affected
                 let _ = conn
                     .execute(
-                        "UPDATE interviews SET url=?2, date=?3, description=?4, interview_type=?5, company_id=?6, recruiter_id=?7, contact_id=?8 where id =?1",
+                        "UPDATE interviews SET url=?2, date=?3, description=?4, interview_type=?5, company_id=?6, contact_id=?7 where id =?1",
                         (
                             &id,
                             &self.url.as_ref(),
@@ -109,7 +100,6 @@ impl Interview {
                             &self.description.as_ref(),
                             &self.interview_type.as_ref(),
 			    &self.company_id.as_ref(),
-			    &self.recruiter_id.as_ref(),
 			    &self.contact_id.as_ref(),
                         ),
                     )
@@ -118,14 +108,13 @@ impl Interview {
             None => {
                 // TODO: Log the result which has usize representing how many rows were affected
                 let _ = conn.execute(
-                "INSERT INTO interviews (url, date, description, interview_type, company_id, recruiter_id, contact_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                "INSERT INTO interviews (url, date, description, interview_type, company_id, contact_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
                 (
                     &self.url.as_ref(),
                     &self.date.as_ref(),
                     &self.description.as_ref(),
                     &self.interview_type.as_ref(),
 		    &self.company_id.as_ref(),
-		    &self.recruiter_id.as_ref(),
 		    &self.contact_id.as_ref(),
                 ),
 		).unwrap();
@@ -173,7 +162,7 @@ mod test {
             description: None,
             interview_type: None,
             company_id: None,
-            recruiter_id: None,
+
             contact_id: None,
         };
 
@@ -193,7 +182,6 @@ mod test {
             interview_type: Some(1),
             description: Some("description".to_string()),
             company_id: None,
-            recruiter_id: None,
             contact_id: None,
         };
         interview.save(&conn);
@@ -214,13 +202,13 @@ mod test {
             interview_type: Some(1),
             description: Some("description".to_string()),
             company_id: None,
-            recruiter_id: None,
+
             contact_id: None,
         };
         interview.save(&conn);
 
         let db_data = conn.query_row(
-            "SELECT id, url, date, description, interview_type, company_id, recruiter_id, contact_id FROM interviews WHERE id = ?1",
+            "SELECT id, url, date, description, interview_type, company_id, contact_id FROM interviews WHERE id = ?1",
             [&interview.id],
             |row| {
                 Ok(Interview{
@@ -230,8 +218,7 @@ mod test {
                     description: row.get(3).ok(),
                     interview_type: row.get(4).ok(),
                     company_id: row.get(5).ok(),
-		    recruiter_id: row.get(6).ok(),
-		    contact_id: row.get(7).ok(),
+		    contact_id: row.get(6).ok(),
                 })
             },
         ).unwrap();
@@ -247,7 +234,7 @@ mod test {
         interview.save(&conn);
 
         let db_data_change = conn.query_row(
-            "SELECT id, url, date, description, interview_type, company_id, recruiter_id, contact_id FROM interviews WHERE id = ?1",
+            "SELECT id, url, date, description, interview_type, company_id, contact_id FROM interviews WHERE id = ?1",
             [&interview.id],
             |row| {
                 Ok(Interview {
@@ -257,8 +244,7 @@ mod test {
                     description: row.get(3).ok(),
                     interview_type: row.get(4).ok(),
                     company_id: row.get(5).ok(),
-		    recruiter_id: row.get(6).ok(),
-		    contact_id: row.get(7).ok(),
+		    contact_id: row.get(6).ok(),
                 })
             },
         ).unwrap();
@@ -276,7 +262,7 @@ mod test {
             interview_type: Some(1),
             description: Some("description".to_string()),
             company_id: Some(4),
-            recruiter_id: Some(5),
+
             contact_id: Some(6),
         };
 
@@ -293,7 +279,7 @@ mod test {
             interview_type: Some(2),
             description: Some("description2".to_string()),
             company_id: Some(41),
-            recruiter_id: Some(51),
+
             contact_id: Some(61),
         };
 
@@ -310,7 +296,7 @@ mod test {
             interview_type: Some(1),
             description: Some("description".to_string()),
             company_id: Some(4),
-            recruiter_id: Some(5),
+
             contact_id: Some(6),
         };
 
@@ -321,7 +307,7 @@ mod test {
         result.set_description(expected.description.clone().unwrap());
         result.set_interview_type(expected.interview_type.clone().unwrap());
         result.set_company_id(expected.company_id.clone().unwrap());
-        result.set_recruiter_id(expected.recruiter_id.clone().unwrap());
+
         result.set_contact_id(expected.contact_id.clone().unwrap());
 
         assert!(result == expected);
