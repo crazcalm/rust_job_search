@@ -142,7 +142,7 @@ impl Company {
 
 #[cfg(test)]
 mod test {
-    use refinery::{Migration, embed_migrations};
+    use refinery::{embed_migrations, Migration};
     use rusqlite::Connection;
     use url::Url;
 

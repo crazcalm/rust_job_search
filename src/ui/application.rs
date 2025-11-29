@@ -3,7 +3,6 @@ use iced::keyboard::{self, key};
 use iced::widget::{self, button, column, container, row, text, text_input};
 use iced::{Center, Element, Subscription, Task};
 
-use crate::ui::counter;
 use crate::ui::create_company;
 use crate::ui::view_companies;
 use crate::ui::welcome_page;
@@ -24,7 +23,6 @@ impl Default for Application {
 #[derive(Debug)]
 enum Screen {
     WelcomePage(welcome_page::WelcomePageUI),
-    Counter(counter::Counter),
     CreateCompany(create_company::CreateCompanyUI),
     ViewCompanies(view_companies::ViewCompaniesUI),
 }
@@ -32,7 +30,6 @@ enum Screen {
 #[derive(Debug)]
 pub enum Message {
     WelcomePage(welcome_page::Message),
-    Counter(counter::Message),
     CreateCompany(create_company::Message),
     ViewCompanies(view_companies::Message),
     Event(Event),
@@ -92,24 +89,6 @@ impl Application {
                     Task::none()
                 }
             }
-
-            Message::Counter(message) => {
-                if let Screen::Counter(counter_instance) = &mut self.screen {
-                    match message {
-                        counter::Message::ChangeScreen => {
-                            self.screen =
-                                Screen::CreateCompany(create_company::CreateCompanyUI::default());
-                            Task::none()
-                        }
-                        _ => {
-                            let _ = counter_instance.update(message);
-                            Task::none()
-                        }
-                    }
-                } else {
-                    Task::none()
-                }
-            }
             Message::CreateCompany(message) => {
                 if let Screen::CreateCompany(create_company_instance) = &mut self.screen {
                     match message {
@@ -160,7 +139,6 @@ impl Application {
     }
     pub fn view(&self) -> Element<Message> {
         match &self.screen {
-            Screen::Counter(counter) => counter.view().map(Message::Counter),
             Screen::CreateCompany(create_company) => {
                 create_company.view().map(Message::CreateCompany)
             }

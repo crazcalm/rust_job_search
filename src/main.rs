@@ -2,7 +2,7 @@
 
 use crate::models::Company;
 use crate::ui::create_company;
-use crate::ui::{Application, Counter, CreateCompanyUI, ViewCompaniesUI, WelcomePageUI};
+use crate::ui::{Application, CreateCompanyUI, ViewCompaniesUI, WelcomePageUI};
 
 pub mod db;
 pub mod models;

@@ -148,7 +148,7 @@ impl Contact {
 #[cfg(test)]
 mod test {
     use super::*;
-    use refinery::{Migration, embed_migrations};
+    use refinery::{embed_migrations, Migration};
     use rusqlite::Connection;
     use url::Url;
 
