@@ -2,7 +2,7 @@
 
 use crate::models::Company;
 use crate::ui::create_company;
-use crate::ui::{Application, CreateCompanyUI, ViewCompaniesUI, WelcomePageUI};
+use crate::ui::{Application, CreateCompanyUI, CreateJobPostingUI, ViewCompaniesUI, WelcomePageUI};
 
 pub mod db;
 pub mod models;
@@ -26,15 +26,21 @@ fn main() {
         phone: Some("1111111111".to_string()),
     };
     test_company.save(&conn);
-    */
+     */
+
+    /*
     iced::application("Example", Application::update, Application::view)
         .subscription(Application::subscription)
         .run()
         .unwrap();
 
-    /*
-    iced::application("Example", WelcomePageUI::update, WelcomePageUI::view)
-        .run()
-    .unwrap();
     */
+    iced::application(
+        "Example",
+        CreateJobPostingUI::update,
+        CreateJobPostingUI::view,
+    )
+    .subscription(CreateJobPostingUI::subscription)
+    .run()
+    .unwrap();
 }
